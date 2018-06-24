@@ -1,32 +1,17 @@
 import TopLevelWrapper from "./TopLevelWrapper.js";
 import McReactCompositeComponentWrapper from "./McReactCompositeComponentWrapper.js";
 import McReactReconciler from "./McReactReconciler.js";
+import { mixSpecIntoComponent, McReactInstanceMap } from "./utils.js";
 
 function McReactComponent() {}
 
 McReactComponent.prototype.setState = function(partialState) {
-  const internalInstance = getMyInternalInstancePlease(this);
+  const internalInstance = McReactInstanceMap.get(this);
 
   internalInstance._pendingPartialState = partialState;
 
   McReactReconciler.performUpdateIfNecessary(internalInstance);
 };
-
-/**
- * Mutates the prototype of a new McReact component according to the specification
- * passed to McReact.createClass
- *
- * @param {*} Constructor - generic Constructor for a McReact Component
- * @param {*} spec - specification object passed to McReact.createClass
- */
-function mixSpecIntoComponent(Constructor, spec) {
-  const proto = Constructor.prototype;
-
-  // Add all enumerables from spec to proto
-  for (const key in spec) {
-    proto[key] = spec[key];
-  }
-}
 
 const McReact = {
   /**

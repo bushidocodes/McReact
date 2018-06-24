@@ -1,14 +1,6 @@
 import McReactReconciler from "./McReactReconciler.js";
 import McReactDOMComponent from "./McReactDOMComponent.js";
-
-const McReactInstanceMap = {
-  set(key, value) {
-    key.__mcreactInternalInstance = value;
-  },
-  get(key) {
-    return key.__mcreactInternalInstance;
-  }
-};
+import { McReactInstanceMap } from "./utils.js";
 
 /**
  * Internally generated class ("Internal Instance") that wraps a single instance of a McReact component ("Public Instance").
@@ -66,6 +58,13 @@ export default class McReactCompositeComponentWrapper {
     return markup;
   }
 
+  /**
+   * Renders, Instantiates, and mounts the Component in the container
+   *
+   * @param {*} container
+   * @returns
+   * @memberof McReactCompositeComponentWrapper
+   */
   performInitialMount(container) {
     // Grab componentInstance from this._instance and call render, which returns the return value of a call to
     // McReact.createElement(). This is recursive, as this invokes McReact.createElement and McReact.createClass
@@ -91,6 +90,13 @@ export default class McReactCompositeComponentWrapper {
     this.updateComponent(this._currentElement, this._currentElement);
   }
 
+  /**
+   * Passed nextElement from McReactReconciler
+   * Triggers updateComponent
+   *
+   * @param {*} nextElement
+   * @memberof McReactCompositeComponentWrapper
+   */
   receiveComponent(nextElement) {
     const prevElement = this._currentElement;
     // Make shallow compare here?
@@ -101,31 +107,38 @@ export default class McReactCompositeComponentWrapper {
     const nextProps = nextElement.props;
     const inst = this._instance;
 
+    // Checks to see if the element (class / props) has changed
+    // This helps us know if we're only updating due to setState
     const willReceive = prevElement !== nextElement;
+
+    // TODO: Implement componentWillUpdate here
 
     if (willReceive && inst.componentWillReceiveProps) {
       inst.componentWillReceiveProps(nextProps);
     }
 
-    let shouldUpdate = true;
+    const nextState = Object.assign({}, inst.state, this._pendingPartialState);
 
+    let shouldUpdate = true;
+    // The user can affect if the component should update via this hook
     if (inst.shouldComponentUpdate) {
-      shouldUpdate = inst.shouldComponentUpdate(nextProps);
+      shouldUpdate = inst.shouldComponentUpdate(nextProps, nextState);
     }
 
     if (shouldUpdate) {
-      this._performComponentUpdate(nextElement, nextProps);
+      this._performComponentUpdate(nextElement, nextProps, nextState);
     } else {
-      // If skipping update, still set props
+      // If skipping update, still set props and state
       inst.props = nextProps;
     }
   }
 
-  _performComponentUpdate(nextElement, nextProps) {
+  _performComponentUpdate(nextElement, nextProps, nextState) {
     this._currentElement = nextElement;
     const inst = this._instance;
 
     inst.props = nextProps;
+    inst.state = nextState;
 
     this._updateRenderedComponent();
   }
