@@ -1,6 +1,6 @@
 # McReact
 
-## A low-budget UI library that implements some core ideas from React 15, including ReactDOM and the Stack Reconciler
+_A low-budget UI library that implements some core ideas from React 15, including ReactDOM and the Stack Reconciler_
 
 ## Why do this?
 
@@ -20,6 +20,7 @@ While abstractions are a good thing, it's always a good idea to have a general u
 - Unmounting and remounting of DOM nodes when the Virtual DOM dynamically inserted or replaced Components in the tree
 - Event Handling of any kind
 - Inline styling or CSS-in-JS support of any kind
+- No concept of transactions, so re-renders clobber state controlled by the DOM (e.g. form inputs)
 
 ## Related Reading on React Internals
 
