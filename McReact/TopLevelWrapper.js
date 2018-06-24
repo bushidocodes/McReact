@@ -1,5 +1,4 @@
-// Use to wrap the entire McReact component tree
-
+// Abstract Top level component rendered at the top of the component tree in McReact.render
 const TopLevelWrapper = function(props) {
   this.props = props;
 };
