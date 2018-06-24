@@ -8,9 +8,15 @@ function McReactComponent() {}
 McReactComponent.prototype.setState = function(partialState) {
   const internalInstance = McReactInstanceMap.get(this);
 
-  internalInstance._pendingPartialState = partialState;
+  internalInstance._pendingPartialState =
+    internalInstance._pendingPartialState || [];
 
-  McReactReconciler.performUpdateIfNecessary(internalInstance);
+  internalInstance._pendingPartialState.push(partialState);
+
+  // If we're already rendering, don't call another update, as the existing render will apply the changes
+  if (!internalInstance._rendering) {
+    McReactReconciler.performUpdateIfNecessary(internalInstance);
+  }
 };
 
 const McReact = {

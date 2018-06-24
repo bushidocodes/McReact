@@ -104,6 +104,9 @@ export default class McReactCompositeComponentWrapper {
   }
 
   updateComponent(prevElement, nextElement) {
+    // We'll batch any setStates called during componentWillReceiveProps to avoid extra renders
+    this._rendering = true;
+
     const nextProps = nextElement.props;
     const inst = this._instance;
 
@@ -117,7 +120,7 @@ export default class McReactCompositeComponentWrapper {
       inst.componentWillReceiveProps(nextProps);
     }
 
-    const nextState = Object.assign({}, inst.state, this._pendingPartialState);
+    const nextState = this._processPendingState();
 
     let shouldUpdate = true;
     // The user can affect if the component should update via this hook
@@ -131,6 +134,23 @@ export default class McReactCompositeComponentWrapper {
       // If skipping update, still set props and state
       inst.props = nextProps;
     }
+    this._rendering = false;
+  }
+
+  _processPendingState() {
+    const inst = this._instance;
+    if (!this._pendingPartialState) {
+      return inst.state;
+    }
+
+    let nextState = inst.state;
+
+    for (let i = 0; i < this._pendingPartialState.length; ++i) {
+      nextState = Object.assign(nextState, this._pendingPartialState[i]);
+    }
+
+    this._pendingPartialState = null;
+    return nextState;
   }
 
   _performComponentUpdate(nextElement, nextProps, nextState) {
